@@ -255,37 +255,41 @@ def load_font(path: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageF
 
 def draw_status_icon(draw: ImageDraw.ImageDraw, status: str, center: tuple[int, int], radius: int) -> None:
     cx, cy = center
-    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=0, width=4)
 
     if status == "NOPE":
-        # Skull icon.
-        draw.ellipse((cx - 25, cy - 20, cx + 25, cy + 22), outline=0, width=4)
-        draw.ellipse((cx - 18, cy + 18, cx + 18, cy + 33), fill=255, outline=0, width=4)
-        draw.ellipse((cx - 16, cy + 3, cx - 4, cy + 16), fill=0)
-        draw.ellipse((cx + 4, cy + 3, cx + 16, cy + 16), fill=0)
-        draw.polygon([(cx, cy + 13), (cx - 4, cy + 20), (cx + 4, cy + 20)], fill=0)
-        draw.line((cx - 10, cy + 30, cx - 8, cy + 36), fill=0, width=4)
-        draw.line((cx + 10, cy + 30, cx + 8, cy + 36), fill=0, width=4)
+        # Skull icon (no outer face ring)
+        draw.ellipse((cx - 25, cy - 24, cx + 25, cy + 24), outline=0, width=4)
+        draw.ellipse((cx - 16, cy - 1, cx - 4, cy + 12), fill=0)
+        draw.ellipse((cx + 4, cy - 1, cx + 16, cy + 12), fill=0)
+        draw.polygon([(cx, cy + 10), (cx - 5, cy + 17), (cx + 5, cy + 17)], fill=0)
+        draw.rectangle((cx - 17, cy + 18, cx + 17, cy + 30), outline=0, width=4, fill=255)
+        for x in (-8, 0, 8):
+            draw.line((cx + x, cy + 20, cx + x, cy + 29), fill=0, width=2)
+        draw.line((cx - 11, cy + 30, cx - 8, cy + 36), fill=0, width=4)
+        draw.line((cx + 11, cy + 30, cx + 8, cy + 36), fill=0, width=4)
+        return
+
+    # Face ring for GREAT/OK/RISKY states.
+    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=0, width=4)
+
+    if status == "RISKY":
+        draw.line((cx - 18, cy - 14, cx - 8, cy - 6), fill=0, width=3)
+        draw.line((cx - 18, cy - 6, cx - 8, cy - 14), fill=0, width=3)
+        draw.line((cx + 8, cy - 14, cx + 18, cy - 6), fill=0, width=3)
+        draw.line((cx + 8, cy - 6, cx + 18, cy - 14), fill=0, width=3)
+        draw.arc((cx - 24, cy + 6, cx + 24, cy + 34), start=200, end=340, fill=0, width=4)
         return
 
     eye_r = 4
-    if status == "RISKY":
-        draw.line((cx - 19, cy - 15, cx - 9, cy - 8), fill=0, width=3)
-        draw.line((cx - 19, cy - 8, cx - 9, cy - 15), fill=0, width=3)
-        draw.line((cx + 9, cy - 15, cx + 19, cy - 8), fill=0, width=3)
-        draw.line((cx + 9, cy - 8, cx + 19, cy - 15), fill=0, width=3)
-        draw.arc((cx - 24, cy + 5, cx + 24, cy + 33), start=200, end=340, fill=0, width=4)
-    else:
-        draw.ellipse((cx - 14 - eye_r, cy - 9 - eye_r, cx - 14 + eye_r, cy - 9 + eye_r), fill=0)
-        draw.ellipse((cx + 14 - eye_r, cy - 9 - eye_r, cx + 14 + eye_r, cy - 9 + eye_r), fill=0)
+    draw.ellipse((cx - 14 - eye_r, cy - 9 - eye_r, cx - 14 + eye_r, cy - 9 + eye_r), fill=0)
+    draw.ellipse((cx + 14 - eye_r, cy - 9 - eye_r, cx + 14 + eye_r, cy - 9 + eye_r), fill=0)
 
-        if status == "GREAT":
-            draw.rectangle((cx - 22, cy + 6, cx + 22, cy + 22), outline=0, width=4, fill=255)
-            draw.line((cx - 18, cy + 13, cx + 18, cy + 13), fill=0, width=3)
-            draw.arc((cx - 26, cy + 4, cx + 26, cy + 30), start=15, end=165, fill=0, width=4)
-        else:  # OK
-            draw.arc((cx - 24, cy + 6, cx + 24, cy + 30), start=20, end=160, fill=0, width=4)
-
+    if status == "GREAT":
+        draw.rectangle((cx - 22, cy + 6, cx + 22, cy + 22), outline=0, width=4, fill=255)
+        draw.line((cx - 18, cy + 13, cx + 18, cy + 13), fill=0, width=3)
+        draw.arc((cx - 24, cy + 8, cx + 24, cy + 34), start=20, end=160, fill=0, width=4)
+    else:  # OK
+        draw.arc((cx - 22, cy + 4, cx + 22, cy + 26), start=20, end=160, fill=0, width=4)
 
 def draw_colored_segments(
     draw_black: ImageDraw.ImageDraw,
