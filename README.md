@@ -96,7 +96,7 @@ You can use `--preview-status` with `GREAT`, `OK`, `RISKY`, or `NOPE` to test ea
 Clear the display and shut down safely:
 
 ```bash
-python -m fpv_board.clear_and_shutdown --config /opt/fpv-board/fpv_board/config.json
+python -m fpv_board.shutdown --config /opt/fpv-board/fpv_board/config.json
 ```
 
 Use `--clear-only` to clear the panel without powering down, or `--dry-run` to verify behavior without touching hardware.
