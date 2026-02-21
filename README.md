@@ -5,7 +5,7 @@ This project fetches Open-Meteo forecast data, evaluates **daylight-only** flyin
 ## Folder structure
 - `fpv_board/main.py` - complete updater application (config load, API client, scoring, drawing, caching).
 - `fpv_board/config.json` - editable runtime config (location, units, thresholds, update tolerances).
-- `requirements.txt` - Python dependencies (`requests`, `Pillow`, `gpiozero`).
+- `requirements.txt` - Python dependencies (`requests`, `Pillow`).
 - `systemd/fpv-board.service` - one-shot unit that runs updater as user `pi`.
 - `systemd/fpv-board.timer` - hourly schedule trigger.
 
