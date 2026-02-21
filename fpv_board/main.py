@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from functools import lru_cache
 from typing import Any
 
 import requests
@@ -20,6 +21,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 MS_PER_MPH = 0.44704
 DISPLAY_STATE_VERSION = 2
+STATUS_ICON_FILES = {
+    "GREAT": "great.png",
+    "OK": "ok.png",
+    "RISKY": "risky.png",
+    "NOPE": "nope.png",
+}
 
 
 @dataclass
@@ -253,43 +260,28 @@ def load_font(path: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageF
 
 
 
-def draw_status_icon(draw: ImageDraw.ImageDraw, status: str, center: tuple[int, int], radius: int) -> None:
+@lru_cache(maxsize=16)
+def load_status_icon(status: str, diameter: int) -> Image.Image:
+    icon_name = STATUS_ICON_FILES.get(status)
+    if not icon_name:
+        raise ValueError(f"Unknown status icon: {status}")
+
+    icon_path = Path(__file__).resolve().parent / "assets" / "icons" / icon_name
+    icon = Image.open(icon_path).convert("L").resize((diameter, diameter), Image.Resampling.LANCZOS)
+    return icon
+
+
+def draw_status_icon(canvas: Image.Image, status: str, center: tuple[int, int], radius: int) -> None:
+    diameter = radius * 2
+    icon = load_status_icon(status, diameter)
     cx, cy = center
+    x = cx - radius
+    y = cy - radius
 
-    if status == "NOPE":
-        # Skull icon (no outer face ring)
-        draw.ellipse((cx - 25, cy - 24, cx + 25, cy + 24), outline=0, width=4)
-        draw.ellipse((cx - 16, cy - 1, cx - 4, cy + 12), fill=0)
-        draw.ellipse((cx + 4, cy - 1, cx + 16, cy + 12), fill=0)
-        draw.polygon([(cx, cy + 10), (cx - 5, cy + 17), (cx + 5, cy + 17)], fill=0)
-        draw.rectangle((cx - 17, cy + 18, cx + 17, cy + 30), outline=0, width=4, fill=255)
-        for x in (-8, 0, 8):
-            draw.line((cx + x, cy + 20, cx + x, cy + 29), fill=0, width=2)
-        draw.line((cx - 11, cy + 30, cx - 8, cy + 36), fill=0, width=4)
-        draw.line((cx + 11, cy + 30, cx + 8, cy + 36), fill=0, width=4)
-        return
+    # Create a mask from dark pixels so only icon strokes are pasted as black.
+    mask = icon.point(lambda p: 255 if p < 180 else 0, mode="1")
+    canvas.paste(0, (x, y), mask)
 
-    # Face ring for GREAT/OK/RISKY states.
-    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=0, width=4)
-
-    if status == "RISKY":
-        draw.line((cx - 18, cy - 14, cx - 8, cy - 6), fill=0, width=3)
-        draw.line((cx - 18, cy - 6, cx - 8, cy - 14), fill=0, width=3)
-        draw.line((cx + 8, cy - 14, cx + 18, cy - 6), fill=0, width=3)
-        draw.line((cx + 8, cy - 6, cx + 18, cy - 14), fill=0, width=3)
-        draw.arc((cx - 24, cy + 6, cx + 24, cy + 34), start=200, end=340, fill=0, width=4)
-        return
-
-    eye_r = 4
-    draw.ellipse((cx - 14 - eye_r, cy - 9 - eye_r, cx - 14 + eye_r, cy - 9 + eye_r), fill=0)
-    draw.ellipse((cx + 14 - eye_r, cy - 9 - eye_r, cx + 14 + eye_r, cy - 9 + eye_r), fill=0)
-
-    if status == "GREAT":
-        draw.rectangle((cx - 22, cy + 6, cx + 22, cy + 22), outline=0, width=4, fill=255)
-        draw.line((cx - 18, cy + 13, cx + 18, cy + 13), fill=0, width=3)
-        draw.arc((cx - 24, cy + 8, cx + 24, cy + 34), start=20, end=160, fill=0, width=4)
-    else:  # OK
-        draw.arc((cx - 22, cy + 4, cx + 22, cy + 26), start=20, end=160, fill=0, width=4)
 
 def draw_colored_segments(
     draw_black: ImageDraw.ImageDraw,
@@ -332,7 +324,7 @@ def render_image(result: dict[str, Any], now: datetime, cfg: dict[str, Any]) -> 
     status_x = max(10, (status_max_right - status_width) // 2)
 
     status_draw.text((status_x, 8), status, font=status_font, fill=0)
-    draw_status_icon(draw_b, status, center=(icon_center_x, icon_center_y), radius=icon_radius)
+    draw_status_icon(black, status, center=(icon_center_x, icon_center_y), radius=icon_radius)
 
     w = result.get("worst", {})
     wind_ms = float(w.get("wind_ms", 0.0))
