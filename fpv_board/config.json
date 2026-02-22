@@ -29,9 +29,9 @@
     "sustained_fly_max": 18,
     "gust_fly_max": 25,
     "gust_spread_fly_max": 8,
-    "rain_probability_fly_max": 35,
+    "rain_probability_fly_max": 85,
     "temperature_min_c": 2,
-    "cloud_cover_warn": 85,
+    "cloud_cover_warn": 100,
     "marginal_multiplier": 1.25
   },
   "forecast": {
