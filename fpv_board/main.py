@@ -135,7 +135,7 @@ def parse_hourly(data: dict[str, Any]) -> tuple[list[HourlyPoint], list[datetime
 
 def next_daylight_window(now: datetime, sunrise: list[datetime], sunset: list[datetime]) -> tuple[datetime, datetime] | None:
     for rise, set_ in zip(sunrise, sunset):
-        if now <= set_:
+        if rise <= now <= set_:
             return rise, set_
     return None
 
@@ -149,6 +149,8 @@ def select_eval_points(
 ) -> list[HourlyPoint]:
     end = now.timestamp() + (hours_ahead * 3600)
     selected = [p for p in points if now <= p.timestamp and p.timestamp.timestamp() <= end]
+    if daylight_only and daylight_window is None:
+        return []
     if daylight_only and daylight_window:
         rise, set_ = daylight_window
         selected = [p for p in selected if rise <= p.timestamp <= set_]
@@ -457,9 +459,24 @@ def states_equal(a: dict[str, Any] | None, b: dict[str, Any]) -> bool:
     return a == b
 
 
+def ensure_waveshare_path() -> None:
+    bundled_lib = Path(__file__).resolve().parent.parent / "waveshare-lib" / "RaspberryPi_JetsonNano" / "python" / "lib"
+    bundled_lib_str = str(bundled_lib)
+    if bundled_lib.exists() and bundled_lib_str not in sys.path:
+        sys.path.insert(0, bundled_lib_str)
+
+
 def show_on_epaper(black: Image.Image, red: Image.Image, model_path: str) -> None:
+    ensure_waveshare_path()
     mod_name, attr_name = model_path.rsplit(".", 1)
-    module = __import__(mod_name, fromlist=[attr_name])
+    try:
+        module = __import__(mod_name, fromlist=[attr_name])
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Could not import Waveshare driver module. Ensure waveshare-lib is cloned at "
+            "/opt/fpv-board/waveshare-lib or set PYTHONPATH to include "
+            "waveshare-lib/RaspberryPi_JetsonNano/python/lib."
+        ) from exc
     epd_factory = getattr(module, attr_name)
     epd = epd_factory() if callable(epd_factory) else getattr(epd_factory, "EPD")()
 
