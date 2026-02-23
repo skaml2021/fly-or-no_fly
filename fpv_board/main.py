@@ -21,7 +21,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 MS_PER_MPH = 0.44704
-DISPLAY_STATE_VERSION = 2
+DISPLAY_STATE_VERSION = 3
 STATUS_ICON_FILES = {
     "GREAT": "great.png",
     "OK": "ok.png",
@@ -432,6 +432,7 @@ def build_display_state(result: dict[str, Any], cfg: dict[str, Any]) -> dict[str
     w = result.get("worst", {})
     return {
         "version": DISPLAY_STATE_VERSION,
+        "boot_id": current_boot_id(),
         "status": result["status"],
         "reason": result["reason"],
         "trend": result["trend"],
@@ -441,6 +442,22 @@ def build_display_state(result: dict[str, Any], cfg: dict[str, Any]) -> dict[str
         "temp": rounded(float(w.get("temp_min", 0.0)), float(tol["temp_c"])),
         "cloud": rounded(float(w.get("cloud", 0.0)), float(tol["cloud_pct"])),
     }
+
+
+def current_boot_id() -> str:
+    try:
+        return Path("/proc/sys/kernel/random/boot_id").read_text(encoding="utf-8").strip()
+    except OSError:
+        # Fall back so we don't break on systems without procfs.
+        return "unknown"
+
+
+def system_boot_time() -> datetime | None:
+    try:
+        uptime_seconds = float(Path("/proc/uptime").read_text(encoding="utf-8").split()[0])
+        return datetime.now() - timedelta(seconds=uptime_seconds)
+    except (OSError, ValueError, IndexError):
+        return None
 
 
 def load_previous_state(cache_file: Path) -> dict[str, Any] | None:
@@ -539,7 +556,15 @@ def run(config_path: Path, dry_run: bool, preview_status: str | None, force_refr
 
     cache_file = Path(cfg["state"]["cache_file"])
     previous_state = load_previous_state(cache_file)
-    changed = force_refresh or bool(preview_status) or (not states_equal(previous_state, display_state))
+    boot_time = system_boot_time()
+    cache_stale = False
+    if boot_time and cache_file.exists():
+        try:
+            cache_stale = datetime.fromtimestamp(cache_file.stat().st_mtime) < boot_time
+        except OSError:
+            cache_stale = True
+
+    changed = force_refresh or bool(preview_status) or cache_stale or (not states_equal(previous_state, display_state))
 
     black, red = render_image(result, now, cfg)
 
