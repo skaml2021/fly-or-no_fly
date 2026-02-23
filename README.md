@@ -17,3 +17,16 @@ sudo apt install -y python3 python3-venv python3-pip git rsync \
 ```
 
 Then follow the full setup guide in [`docs/README_SETUP.md`](docs/README_SETUP.md).
+
+## Running the test suite
+
+From the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt pytest
+pytest -q
+```
+
+This project includes a `pytest.ini` that sets the repository root on `PYTHONPATH`, so tests work from a clean checkout without extra environment variables.
